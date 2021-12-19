@@ -26,11 +26,9 @@ class CheckLastEventStatus {
 describe('CheckLastEventStatus', () => {
   it('Should get last event data', async () => {
     const loadLastEventRepository = new LoadLastEventRepositoryMock();
-    const checkLastEventStatus = new CheckLastEventStatus(
-      loadLastEventRepository,
-    );
+    const sut = new CheckLastEventStatus(loadLastEventRepository);
 
-    await checkLastEventStatus.perform('any_data');
+    await sut.perform('any_data');
 
     expect(loadLastEventRepository.groupId).toBe('any_data');
     expect(loadLastEventRepository.callsCount).toBe(1);
