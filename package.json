@@ -16,6 +16,9 @@
       "path": "cz-conventional-changelog"
     }
   },
+  "dependencies": {
+    "mockdate": "^3.0.5"
+  },
   "devDependencies": {
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^12.1.1",
