@@ -12,26 +12,6 @@ class LoadLastEventRepositorySpy implements ILoadLastEventRepository {
   callsCount = 0;
   output?: { endDate: Date; reviewDurationInHours: number };
 
-  setEndDateAfterNow(): void {
-    this.output = {
-      endDate: new Date(new Date().getTime() + 1),
-      reviewDurationInHours: 1,
-    };
-  }
-
-  setEndDateBeforeNow(): void {
-    this.output = {
-      endDate: new Date(new Date().getTime() - 1),
-      reviewDurationInHours: 1,
-    };
-  }
-
-  setEndDateEqualToNow(): void {
-    this.output = {
-      endDate: new Date(),
-      reviewDurationInHours: 1,
-    };
-  }
   async loadLastEvent(
     groupId: string,
   ): Promise<{ endDate: Date; reviewDurationInHours: number } | undefined> {
@@ -113,6 +93,7 @@ describe('CheckLastEventStatus', () => {
       endDate: new Date(new Date().getTime() + 1),
       reviewDurationInHours: 1,
     };
+
     const eventStatus = await sut.perform({ groupId });
 
     expect(eventStatus.status).toBe('active');
@@ -121,7 +102,10 @@ describe('CheckLastEventStatus', () => {
   it('Should return status inReview when now is after event end time', async () => {
     const { sut, loadLastEventRepository } = makeSut();
 
-    loadLastEventRepository.setEndDateBeforeNow();
+    loadLastEventRepository.output = {
+      endDate: new Date(new Date().getTime() - 1),
+      reviewDurationInHours: 1,
+    };
 
     const eventStatus = await sut.perform({ groupId });
 
@@ -131,7 +115,10 @@ describe('CheckLastEventStatus', () => {
   it('Should return status active when now is equal to event end time', async () => {
     const { sut, loadLastEventRepository } = makeSut();
 
-    loadLastEventRepository.setEndDateEqualToNow();
+    loadLastEventRepository.output = {
+      endDate: new Date(),
+      reviewDurationInHours: 1,
+    };
 
     const eventStatus = await sut.perform({ groupId });
 
@@ -139,12 +126,18 @@ describe('CheckLastEventStatus', () => {
   });
 
   it('Should return status inReview when now is before review time', async () => {
+    const reviewDurationInHours = 1;
+    const reviewDurationInMs = 360000;
+
     const { sut, loadLastEventRepository } = makeSut();
 
-    loadLastEventRepository.setEndDateAfterNow();
+    loadLastEventRepository.output = {
+      endDate: new Date(new Date().getTime() - reviewDurationInMs + 1),
+      reviewDurationInHours,
+    };
 
     const eventStatus = await sut.perform({ groupId });
 
-    expect(eventStatus.status).toBe('active');
+    expect(eventStatus.status).toBe('inReview');
   });
 });
