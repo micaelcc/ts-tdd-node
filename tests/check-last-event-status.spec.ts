@@ -33,7 +33,7 @@ class CheckLastEventStatus {
 
     const now = new Date();
 
-    return event.endDate > now ? { status: 'active' } : { status: 'inReview' };
+    return event.endDate >= now ? { status: 'active' } : { status: 'inReview' };
   }
 }
 type SutTypes = {
@@ -94,6 +94,17 @@ describe('CheckLastEventStatus', () => {
   });
 
   it('Should return status inReview when now is after event end time', async () => {
+    const { sut, loadLastEventRepository } = makeSut();
+
+    loadLastEventRepository.output = {
+      endDate: new Date(),
+    };
+    const eventStatus = await sut.perform({ groupId });
+
+    expect(eventStatus.status).toBe('active');
+  });
+
+  it('Should return status active when now is equal to event end time', async () => {
     const { sut, loadLastEventRepository } = makeSut();
 
     loadLastEventRepository.output = {
