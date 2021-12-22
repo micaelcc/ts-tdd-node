@@ -97,21 +97,21 @@ describe('CheckLastEventStatus', () => {
     const { sut, loadLastEventRepository } = makeSut();
 
     loadLastEventRepository.output = {
-      endDate: new Date(),
+      endDate: new Date(new Date().getTime() - 1),
     };
     const eventStatus = await sut.perform({ groupId });
 
-    expect(eventStatus.status).toBe('active');
+    expect(eventStatus.status).toBe('inReview');
   });
 
   it('Should return status active when now is equal to event end time', async () => {
     const { sut, loadLastEventRepository } = makeSut();
 
     loadLastEventRepository.output = {
-      endDate: new Date(new Date().getTime() - 1),
+      endDate: new Date(),
     };
     const eventStatus = await sut.perform({ groupId });
 
-    expect(eventStatus.status).toBe('inReview');
+    expect(eventStatus.status).toBe('active');
   });
 });
