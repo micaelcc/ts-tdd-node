@@ -27,11 +27,25 @@ class CheckLastEventStatus {
     return 'done';
   }
 }
+type SutTypes = {
+  sut: CheckLastEventStatus;
+  loadLastEventRepository: LoadLastEventRepositorySpy;
+};
+
+const makeSut = (): SutTypes => {
+  const loadLastEventRepository = new LoadLastEventRepositorySpy();
+
+  const sut = new CheckLastEventStatus(loadLastEventRepository);
+
+  return {
+    sut,
+    loadLastEventRepository,
+  };
+};
 
 describe('CheckLastEventStatus', () => {
   it('Should get last event data', async () => {
-    const loadLastEventRepository = new LoadLastEventRepositorySpy();
-    const sut = new CheckLastEventStatus(loadLastEventRepository);
+    const { sut, loadLastEventRepository } = makeSut();
 
     await sut.perform('any_data');
 
@@ -40,11 +54,7 @@ describe('CheckLastEventStatus', () => {
   });
 
   it('Should return status done when group has no event', async () => {
-    const loadLastEventRepository = new LoadLastEventRepositorySpy();
-
-    loadLastEventRepository.output = undefined;
-
-    const sut = new CheckLastEventStatus(loadLastEventRepository);
+    const { sut } = makeSut();
 
     const status = await sut.perform('any_data');
 
