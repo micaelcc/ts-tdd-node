@@ -22,7 +22,29 @@ class LoadLastEventRepositorySpy implements ILoadLastEventRepository {
   }
 }
 
-type EventStatus = { status: string };
+class EventStatus {
+  status: 'active' | 'inReview' | 'done';
+
+  constructor(event?: { endDate: Date; reviewDurationInHours: number }) {
+    const now = new Date();
+
+    if (!event) {
+      this.status = 'done';
+      return;
+    }
+
+    if (event.endDate >= now) {
+      this.status = 'active';
+      return;
+    }
+
+    const reviewDurationInMs = event.reviewDurationInHours * 3600000;
+
+    const reviewDate = new Date(event.endDate.getTime() + reviewDurationInMs);
+
+    this.status = reviewDate >= now ? 'inReview' : 'done';
+  }
+}
 
 class CheckLastEventStatus {
   constructor(
@@ -33,17 +55,7 @@ class CheckLastEventStatus {
       input.groupId,
     );
 
-    const now = new Date();
-
-    if (!event) return { status: 'done' };
-
-    if (event.endDate >= now) return { status: 'active' };
-
-    const reviewDurationInMs = event.reviewDurationInHours * 3600000;
-
-    const reviewDate = new Date(event.endDate.getTime() + reviewDurationInMs);
-
-    return reviewDate >= now ? { status: 'inReview' } : { status: 'done' };
+    return new EventStatus(event);
   }
 }
 type SutTypes = {
