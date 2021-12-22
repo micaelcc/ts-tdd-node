@@ -33,11 +33,17 @@ class CheckLastEventStatus {
       input.groupId,
     );
 
-    if (!event) return { status: 'done' };
-
     const now = new Date();
 
-    return event.endDate >= now ? { status: 'active' } : { status: 'inReview' };
+    if (!event) return { status: 'done' };
+
+    if (event.endDate >= now) return { status: 'active' };
+
+    const reviewDurationInMs = event.reviewDurationInHours * 3600000;
+
+    const reviewDate = new Date(event.endDate.getTime() + reviewDurationInMs);
+
+    return reviewDate >= now ? { status: 'inReview' } : { status: 'done' };
   }
 }
 type SutTypes = {
@@ -127,7 +133,7 @@ describe('CheckLastEventStatus', () => {
 
   it('Should return status inReview when now is before review time', async () => {
     const reviewDurationInHours = 1;
-    const reviewDurationInMs = 360000;
+    const reviewDurationInMs = 3600000;
 
     const { sut, loadLastEventRepository } = makeSut();
 
@@ -143,7 +149,7 @@ describe('CheckLastEventStatus', () => {
 
   it('Should return status inReview when now equal to review time', async () => {
     const reviewDurationInHours = 1;
-    const reviewDurationInMs = 360000;
+    const reviewDurationInMs = 3600000;
 
     const { sut, loadLastEventRepository } = makeSut();
 
@@ -155,5 +161,21 @@ describe('CheckLastEventStatus', () => {
     const eventStatus = await sut.perform({ groupId });
 
     expect(eventStatus.status).toBe('inReview');
+  });
+
+  it('Should return status done when now is after review time', async () => {
+    const reviewDurationInHours = 1;
+    const reviewDurationInMs = 3600000;
+
+    const { sut, loadLastEventRepository } = makeSut();
+
+    loadLastEventRepository.output = {
+      endDate: new Date(new Date().getTime() - reviewDurationInMs - 1),
+      reviewDurationInHours,
+    };
+
+    const eventStatus = await sut.perform({ groupId });
+
+    expect(eventStatus.status).toBe('done');
   });
 });
